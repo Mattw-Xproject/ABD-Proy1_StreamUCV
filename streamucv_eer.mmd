@@ -1,0 +1,177 @@
+flowchart TD
+    %% ═══════════════════════════════════════════════════════════════════════
+    %% STREAMUCV — Diagrama Entidad Relación Extendido (EER)
+    %% Fase: Modelado Conceptual Temprano (Diagrama as Code)
+    %% BD: StreamUCV | Esquema: streaming | SQL Server 2022
+    %% Notación: Entidades [(E)] · Relaciones {R} · Atributos ([a])
+    %% PK subrayada · Derivado(*) · Enumerado{v1, v2} · ISA
+    %% ═══════════════════════════════════════════════════════════════════════
+    %% ─── DEFINICIÓN DE CLASES ───────────────────────────────────────────────
+    classDef contenido fill:#BBDEFB,stroke:#1565C0,stroke-width:2px,color:#0D0D0D
+    classDef distribucion fill:#C8E6C9,stroke:#2E7D32,stroke-width:2px,color:#0D0D0D
+    classDef persona fill:#FFCCBC,stroke:#BF360C,stroke-width:2px,color:#0D0D0D
+    classDef temporal fill:#E1BEE7,stroke:#6A1B9A,stroke-width:2px,color:#0D0D0D
+    classDef superclase fill:#FFF8E1,stroke:#E65100,stroke-width:3px,color:#0D0D0D
+    classDef isa fill:#FAFAFA,stroke:#212121,stroke-width:1px,color:#212121,stroke-dasharray: 5 5
+    classDef relacion fill:#FFF9C4,stroke:#F9A825,stroke-width:2px,color:#0D0D0D
+    classDef relTernaria fill:#FCE4EC,stroke:#C62828,stroke-width:2px,color:#0D0D0D
+    classDef atributo fill:#FAFAFA,stroke:#9E9E9E,stroke-width:1px,color:#212121
+    classDef atributoPK fill:#EEEEEE,stroke:#212121,stroke-width:2px,color:#000,font-weight:bold
+    classDef atributoDer fill:#E3F2FD,stroke:#1976D2,stroke-width:1px,stroke-dasharray:4 2,color:#0D0D0D
+    classDef atributoEnum fill:#F3E5F5,stroke:#7B1FA2,stroke-width:1px,color:#212121
+
+    %% BLOQUE 0 ── GENERALIZACIÓN / SUPERCLASE
+    %% CONTENIDO_AUDIOVISUAL generaliza SERIE y PELÍCULA
+    %% Restricción: Total y Disjunta
+    CONT_AV[CONTENIDO\nAUDIOVISUAL]:::superclase
+    acav1([titulo / nombre]):::atributo
+    acav2([descripcion / resena]):::atributo
+    acav3([cant_actores *]):::atributoDer
+    CONT_AV --- acav1 & acav2 & acav3
+    
+    ISA_CONT[\ISA/]:::isa
+
+    %% BLOQUE 1 ── ENTIDAD: SERIE
+    %% Subclase de CONTENIDO_AUDIOVISUAL
+    %% Índice: ix_serie_nombre sobre nombre_serie
+    SERIE[(SERIE)]:::contenido
+    as1(["<u>cod_serie</u>"]):::atributoPK
+    as2([nombre_serie idx]):::atributo
+    as3([tipo_serie]):::atributo
+    as3_enum[[ramatica, suspenso, comica]]:::atributoEnum
+    as4([rating ∈ 0–10]):::atributo
+    as5([desc_serie]):::atributo
+    CONT_AV --Subtipo--> ISA_CONT --Edges--> SERIE
+    SERIE --- as1 & as2 & as3 & as4 & as5
+    as3 -.-> as3_enum
+
+    %% BLOQUE 2 ── ENTIDAD: PELÍCULA
+    %% Subclase de CONTENIDO_AUDIOVISUAL
+    %% Índice: ix_pelicula_nombre_promocion
+
+    PELICULA[(PELÍCULA)]:::contenido
+    ap1(["<u>cod_pelicula</u>"]):::atributoPK
+    ap2([nombre_promocion idx]):::atributo
+    ap3([monto ≥ 0]):::atributo
+    ap4([resena]):::atributo
+    ISA_CONT --Edges--> PELICULA
+    PELICULA --- ap1 & ap2 & ap3 & ap4
+
+    %% BLOQUE 3 ── ENTIDAD: CADENA
+    %% Entidad fuerte e independiente
+    %% Índice: ix_cadena_nombre
+
+    CADENA[(CADENA)]:::distribucion
+    aca1(["<u>cod_cadena</u>"]):::atributoPK
+    aca2([nombre_cadena idx]):::atributo
+    aca3([presidente]):::atributo
+    aca4([direccion_cadena]):::atributo
+    CADENA --- aca1 & aca2 & aca3 & aca4
+
+    %% BLOQUE 4 ── ENTIDAD: ARTISTA
+    %% Índices: ix_artista_nombre_real · ix_artista_nombre_artistico
+    ARTISTA[(ARTISTA)]:::persona
+    aar1(["<u>cod_artista</u>"]):::atributoPK
+    aar2([nombre_real idx]):::atributo
+    aar3([nombre_artistico idx]):::atributo
+    ARTISTA --- aar1 & aar2 & aar3
+
+    %% BLOQUE 5 ── ENTIDAD: PERSONAJE
+    %% Índice: ix_personaje_nombre
+    PERSONAJE[(PERSONAJE)]:::persona
+    ape1(["<u>cod_personaje</u>"]):::atributoPK
+    ape2([nombre_personaje idx]):::atributo
+    ape3([tipo_personaje]):::atributo
+    PERSONAJE --- ape1 & ape2 & ape3
+
+    %% BLOQUE 6 ── ENTIDAD: HORARIO
+    HORARIO[(HORARIO)]:::distribucion
+    ah1(["<u>cod_horario</u>"]):::atributoPK
+    ah2([hora_comienzo]):::atributo
+    ah3([hora_fin]):::atributo
+    ah4([tipo_horario]):::atributo
+    ah4_enum[[Todo publico, Adultos]]:::atributoEnum
+    HORARIO --- ah1 & ah2 & ah3 & ah4
+    ah4 -.-> ah4_enum
+
+    %% BLOQUE 7 ── ENTIDAD: SEMANA (PK Compuesta de 3 atributos)
+    SEMANA[(SEMANA)]:::temporal
+    ase1(["<u>numero_semana</u> > 0"]):::atributoPK
+    ase2(["<u>mes</u> ∈ 1–12"]):::atributoPK
+    ase3(["<u>anio</u> ≥ 1990"]):::atributoPK
+    ase4([exito]):::atributo
+    ase4_enum[[Mucho exito, Poco exito, Nadie la vio]]:::atributoEnum
+    ase5([tematica]):::atributo
+    ase5_enum[[Romanticas, Comedia, Suspenso, Terror, Independiente]]:::atributoEnum
+    SEMANA --- ase1 & ase2 & ase3 & ase4 & ase5
+    ase4 -.-> ase4_enum
+    ase5 -.-> ase5_enum
+
+    %% RELACIÓN 1 ── LANZAR [Binaria · N : M]
+    %% Una CADENA lanza N SERIES · Una SERIE es lanzada por N CADENAS
+    %% PK compuesta: cod_cadena + cod_serie + fecha_lanzamiento
+    LANZAR{LANZAR}:::relacion
+    al1(["<u>fecha_lanzamiento</u>"]):::atributoPK
+    al2([critica]):::atributo
+    al3([fecha_cancelacion]):::atributo
+    CADENA -- "N" --- LANZAR
+    LANZAR -- "N" --- SERIE
+    LANZAR --- al1 & al2 & al3
+
+    %% RELACIÓN 2 ── VENTA [Ternaria · CADENA interviene en doble rol]
+    %% Una CADENA (vendedora) vende N veces una SERIE a otra CADENA (compradora)
+    %% PK: cod_serie + cod_cadena_vendedora + cod_cadena_compradora + fecha_venta
+    VENTA{VENTA}:::relTernaria
+    av1(["<u>fecha_venta</u>"]):::atributoPK
+    av2([cambios]):::atributo
+    av2_enum[[si, no]]:::atributoEnum
+    SERIE -- "N" --- VENTA
+    CADENA -- "rol: Vendedora N" --- VENTA
+    VENTA -- "rol: Compradora N" --- CADENA
+    VENTA --- av1 & av2
+    av2 -.-> av2_enum
+
+    %% RELACIÓN 3 ── INTERPRETA [Ternaria · ARTISTA · PERSONAJE · SERIE]
+    %% Un ARTISTA interpreta un PERSONAJE dentro de una SERIE
+    %% PK: cod_serie + cod_personaje + cod_artista + fecha_interpretacion
+    INTERPRETA{INTERPRETA}:::relTernaria
+    ai1(["<u>fecha_interpretacion</u>"]):::atributoPK
+    ai2([critica]):::atributo
+    ai3([aparicion]):::atributo
+    ai3_enum[[Recurrente, Especial]]:::atributoEnum
+    ai4([cant_episodios ≥ 1]):::atributo
+    PERSONAJE -- "N" --- INTERPRETA
+    ARTISTA -- "N" --- INTERPRETA
+    SERIE -- "N" --- INTERPRETA
+    INTERPRETA --- ai1 & ai2 & ai3 & ai4
+    ai3 -.-> ai3_enum
+
+    %% RELACIÓN 4 ── PARTICIPA [Binaria · N : M]
+    %% Un ARTISTA participa en N PELÍCULAS · Una PELÍCULA tiene N ARTISTAS
+    %% PK: cod_pelicula + cod_artista
+    PARTICIPA{PARTICIPA}:::relacion
+    apa1([principal]):::atributo
+    apa1_enum[[si, no]]:::atributoEnum
+    apa2([critica]):::atributo
+    apa3([merece_premio]):::atributo
+    apa3_enum{si, no}:::atributoEnum
+    ARTISTA -- "N" --- PARTICIPA
+    PARTICIPA -- "N" --- PELICULA
+    PARTICIPA --- apa1 & apa2 & apa3
+    apa1 -.-> apa1_enum
+    apa3 -.-> apa3_enum
+
+    %% RELACIÓN 5 ── TRANSMITE [Ternaria Reflexiva · SERIE en doble rol]
+    %% Un HORARIO transmite una SERIE (principal) con una SERIE (sustituta)
+    %% SERIE participa en dos roles distintos sobre la misma relación
+    %% PK: cod_horario + cod_serie + cod_serie_sustituta
+    TRANSMITE{TRANSMITE}:::relTernaria
+    HORARIO -- "1" --- TRANSMITE
+    SERIE -- "rol: Principal N" --- TRANSMITE
+    TRANSMITE -- "rol: Sustituta N" --- SERIE
+
+    %% RELACIÓN 6 ── INVOLUCRADA [Binaria · N : M]
+    %% PK: numero_semana + mes + anio + cod_pelicula
+    INVOLUCRADA{INVOLUCRADA}:::relacion
+    SEMANA -- "N" --- INVOLUCRADA
+    INVOLUCRADA -- "N" --- PELICULA
