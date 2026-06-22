@@ -1,5 +1,6 @@
 # 🎬 StreamUCV — Data Dictionary Interrogator
 
+> [!NOTE] 
 > **Proyecto #1 · Administración de Bases de Datos · UCV · Escuela de Computación · Semestre 1-2026**
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)
@@ -16,11 +17,12 @@
 
 En lugar de que los analistas escriban consultas SQL manualmente, la aplicación expone **10 reportes técnicos** sobre la estructura interna de la BD —tablas, índices, restricciones, triggers, tamaños físicos y estimaciones de costo— todos extraídos en tiempo real desde las vistas de catálogo `sys.*` de SQL Server.
 
+> [!CAUTION]
 > *"El Diccionario de Datos no describe series ni actores: describe las propias tablas, columnas e índices. Es la BD dentro de la BD."*
 
 ---
 
-## 🖥️ Vista previa de la interfaz
+## 🖥️ Vista previa de la interfaz 
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -58,10 +60,12 @@ StreamUCV_DD/
 ├── config.py               ★ ÚNICO archivo a modificar para cada entorno
 ├── db.py                   Capa de acceso a datos — conexión pyodbc
 ├── queries.py              13 consultas T-SQL al catálogo sys.* (solo lectura)
+├── streamucv_eer.mmd       ← Diagrama EER en Mermaid (Diagram as Code)
 ├── streamucv_app.py        Aplicación completa tkinter (831 líneas)
 ├── requirements.txt        Dependencia: pyodbc
 ├── README.md               Este archivo
 │
+└── docs/
 └── sql/
     ├── create_repositorio_sqlserver.sql   Crea BD StreamUCV + esquema streaming
     ├── create_tables_sqlserver.sql        13 tablas, PK, FK, CHECK, índices
@@ -88,7 +92,7 @@ StreamUCV_DD/
 | **ODBC Driver** | 17 for SQL Server | Descargar desde Microsoft si no está instalado |
 | **pyodbc** | 4.0.39 | Única dependencia externa |
 | **Sistema operativo** | Windows 10 / 11 | tkinter incluido; en Linux instalar `python3-tk` |
-
+> [!WARNING]  
 > **Verificar driver ODBC instalado** → Panel de control → Herramientas administrativas → Orígenes de datos ODBC → pestaña *Controladores*.
 
 ---
@@ -189,7 +193,7 @@ El **Diccionario de Datos** (D/D) de SQL Server es un conjunto de vistas de sist
          ▼  Resultados → Treeview / tarjetas / CSV
   Interfaz tkinter (sin que el usuario escriba SQL)
 ```
-
+> [!IMPORTANT] 
 > A diferencia de los datos de negocio (series, actores, cadenas), el catálogo almacena **metadatos**: definiciones de tablas, tipos de columnas, ubicación física, estadísticas de almacenamiento. Consultar el D/D es la base del trabajo del DBA.
 
 ---
@@ -257,6 +261,7 @@ Tasa de transferencia: **17 MB/s** = 17 × 1 024 × 1 024 = **17 825 792 bytes/s
 
 ## 🗃️ Esquema de la base de datos StreamUCV
 
+![STREAMUCV - Diagrama Entidad Relación Extendido (ER-E) V2](docs/STREAMUCV - Diagrama Entidad Relación Extendido (ER-E) V2.png)
 ```
 cadena ─────────────── lanzar ───────────── serie ─────────────┐
           └──────────── venta ─────────────────────────────────┤
@@ -299,12 +304,12 @@ horario ─────────────── transmite ── serie
 
 ## Restricciones del proyecto cumplidas
 
-- [ ] Operaciones **exclusivamente de lectura** (`SELECT`) sobre el catálogo `sys.*`
-- [ ] Las tablas, columnas, restricciones, índices y datos de `StreamUCV` **no se modifican**
-- [ ] No se crean vistas auxiliares ni procedimientos almacenados en la BD
-- [ ] Toda la lógica analítica (cálculo de `tr`, `fb`, costos) vive en la **capa Python**
-- [ ] Los datos de conexión están centralizados en un único archivo (`config.py`)
-- [ ] La aplicación puede adaptarse a cualquier instancia local modificando solo `config.py`
+- [X] Operaciones **exclusivamente de lectura** (`SELECT`) sobre el catálogo `sys.*`
+- [X] Las tablas, columnas, restricciones, índices y datos de `StreamUCV` **no se modifican**
+- [X] No se crean vistas auxiliares ni procedimientos almacenados en la BD
+- [X] Toda la lógica analítica (cálculo de `tr`, `fb`, costos) vive en la **capa Python**
+- [X] Los datos de conexión están centralizados en un único archivo (`config.py`)
+- [X] La aplicación puede adaptarse a cualquier instancia local modificando solo `config.py`
 
 ---
 
@@ -323,16 +328,16 @@ horario ─────────────── transmite ── serie
 
 ## 📁 Formato de entrega
 
-Comprimir el directorio como `.zip` con el formato:
+Descargado desde Github y Comprimido el directorio como `.zip`:
 
 ```
 <NombreApellido1>_<NombreApellido2>_<NombreApellido3>.zip
 ```
 
-Contenido mínimo requerido:
+Contenido mínimo requerido y cumplido:
 - `config.py`, `db.py`, `queries.py`, `streamucv_app.py`
 - `requirements.txt`
-- Documentación (este `README.md`)
+- Documentación (este `README.md`, PDF en /docs)
 - Scripts SQL en `sql/`
 
 
@@ -340,10 +345,10 @@ Contenido mínimo requerido:
 
 ## 👥 Integrantes / Devs
 
-| Nombre | Carnet |
-|---|---|
-| Mateo González | V 29900089 |
-| Samuel Flores  | V 30416486 |
+| Rol | Nombre | Carnet |
+|---|---|---|
+| Propietario del Repo. y Lead Developer | Mateo González | V 29900089 |
+| Desarrollador, QA y Documentación PDF | Samuel Flores  | V 30416486 |
 
 ---
 
@@ -355,6 +360,6 @@ Uso académico exclusivo — **Administración de Bases de Datos · UCV · 2026*
 
 <p align="center">
   <em>Universidad Central de Venezuela · Facultad de Ciencias </em><br/>
-  <em> Dra. Concettina Di Vasta y MSc. Christian Lechiguero · Escuela de Computación </em>
+  <em> Dra. Concettina Di Vasta y MSc. Christian Lechiguero · Escuela de Computación </em><br/>
   <em>Administración de Bases de Datos — Semestre 1-2026 — Aux. Doc. J. Rojas & M. Barboza</em>
 </p>
