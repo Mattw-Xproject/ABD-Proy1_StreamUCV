@@ -1,4 +1,6 @@
-# 🎬 StreamUCV — Data Dictionary Interrogator
+<img width="2040" height="780" alt="STREAM UCV Logo" src="https://github.com/user-attachments/assets/b09e4e4b-85fc-481a-9c0b-28498f154bba" />
+
+# StreamUCV — Data Dictionary Interrogator
 
 > [!NOTE] 
 > **Proyecto #1 · Administración de Bases de Datos · UCV · Escuela de Computación · Semestre 1-2026**
@@ -19,6 +21,7 @@ En lugar de que los analistas escriban consultas SQL manualmente, la aplicación
 
 > [!CAUTION]
 > *"El Diccionario de Datos no describe series ni actores: describe las propias tablas, columnas e índices. Es la BD dentro de la BD."*
+<img width="1408" height="768" alt="Overview" src="https://github.com/user-attachments/assets/aefe86c4-99bf-461f-bdc8-a8afd108301f" />
 
 ---
 
@@ -261,7 +264,12 @@ Tasa de transferencia: **17 MB/s** = 17 × 1 024 × 1 024 = **17 825 792 bytes/s
 
 ## 🗃️ Esquema de la base de datos StreamUCV
 
-![STREAMUCV - Diagrama Entidad Relación Extendido (ER-E) V2](docs/STREAMUCV - Diagrama Entidad Relación Extendido (ER-E) V2.png)
+### Diagrama Entidad-Relación Extendido (EER)
+
+El modelo conceptual del sistema fue construido como **Diagrama as Code (DaC)** en formato Mermaid y se almacena versionado en la raíz del repositorio (`streamucv_eer.mmd`). La imagen exportada, y modificada con los datos del proyecto se encuentra en `docs/`.
+
+![STREAMUCV - Diagrama Entidad Relación Extendido (ER-E) V2](docs/STREAMUCV%20-%20Diagrama%20Entidad%20Relación%20Extendido%20(ER-E)%20V2.png)
+
 ```
 cadena ─────────────── lanzar ───────────── serie ─────────────┐
           └──────────── venta ─────────────────────────────────┤
@@ -289,6 +297,75 @@ horario ─────────────── transmite ── serie
 
 ---
 
+### 📐 Código Fuente del Diagrama (DaC — Mermaid)
+
+El diagrama se almacena en [`streamucv_eer.mmd`](./streamucv_eer.mmd) en formato Mermaid, lo que permite versionarlo en git y regenerarlo en cualquier herramienta compatible: [mermaid.live](https://mermaid.live), GitHub (renderiza `.mmd` nativamente) o la extensión de VS Code. El fragmento principal ilustra las decisiones de modelado clave:
+
+```mmd
+flowchart TD
+
+    %% ═══════════════════════════════════════════════════════════════════════
+    %%          STREAMUCV — Diagrama Entidad Relación Extendido (EER)
+    %% Fase:    Modelado Conceptual de la BD (Diagram as Code)
+    %% BD:      StreamUCV | Esquema: streaming | SQL Server 2022
+    %% Notación: Entidades [(E)] · Relaciones {R} · Atributos ([a])
+    %%           PK subrayada · Derivado (*) · Enumerado {v1, v2} · ISA /▼\
+    %% ═══════════════════════════════════════════════════════════════════════
+
+    %% Generalización Total y Disjunta: CONTENIDO_AUDIOVISUAL → {SERIE, PELÍCULA}
+    %% Usamos la notación del triángulo invertido / trapezoide ([\/]) para "IS A"
+    CONT_AV[(CONTENIDO AUDIOVISUAL)]:::superclase
+    ISA_CONT[\ Total · Disjunta /]:::isa
+    CONT_AV --> ISA_CONT
+    ISA_CONT --> SERIE
+    ISA_CONT --> PELICULA
+
+    %% RELACIÓN 1 ── LANZAR [Binaria · N : M]
+    %% PK compuesta: cod_cadena + cod_serie + fecha_lanzamiento
+    LANZAR{LANZAR}:::relacion
+    CADENA -- "N" --- LANZAR
+    LANZAR -- "N" --- SERIE
+
+    %% RELACIÓN 3 ── INTERPRETA [Ternaria · ARTISTA · PERSONAJE · SERIE]
+    %% PK: cod_serie + cod_personaje + cod_artista + fecha_interpretacion
+    INTERPRETA{INTERPRETA}:::relTernaria
+    PERSONAJE -- "N" --- INTERPRETA
+    ARTISTA   -- "N" --- INTERPRETA
+    SERIE     -- "N" --- INTERPRETA
+
+    %% RELACIÓN 4 ── PARTICIPA [Binaria · N : M]
+    %% PK: cod_pelicula + cod_artista
+    PARTICIPA{PARTICIPA}:::relacion
+    ARTISTA   -- "N" --- PARTICIPA
+    PARTICIPA -- "N" --- PELICULA
+
+    %% RELACIÓN 6 ── INVOLUCRADA [Binaria · N : M]
+    %% PK: numero_semana + mes + anio + cod_pelicula
+    INVOLUCRADA{INVOLUCRADA}:::relacion
+    SEMANA      -- "N" --- INVOLUCRADA
+    INVOLUCRADA -- "N" --- PELICULA
+
+    %% ENTIDAD: SEMANA — PK Compuesta con restricciones de dominio
+    SEMANA[(SEMANA)]:::temporal
+    ase1(["<u>numero_semana</u>  > 0"]):::atributoPK
+    ase2(["<u>mes</u>  ∈ 1–12"]):::atributoPK
+    ase3(["<u>anio</u>  ≥ 1990"]):::atributoPK
+    ase4([exito]):::atributo
+    ase4_enum[[Mucho exito, Poco exito, Nadie la vio]]:::atributoEnum
+    ase5([tematica]):::atributo
+    ase5_enum[[Romanticas, Comedia, Suspenso, Terror, Independiente]]:::atributoEnum
+    SEMANA --- ase1 & ase2 & ase3 & ase4 & ase5
+    ase4 -.-> ase4_enum
+    ase5 -.-> ase5_enum
+```
+> [!NOTE]  
+> **Decisiones de modelado destacadas**
+> - La superclase abstracta `CONTENIDO_AUDIOVISUAL` agrupa `SERIE` y `PELÍCULA` bajo una generalización **Total · Disjunta** — representada con el trapezoide invertido `[\ /]` como triángulo ISA.
+> - `VENTA` e `INTERPRETA` son **relaciones ternarias**: `CADENA` participa con doble rol (vendedora / compradora) y `SERIE` también en `TRANSMITE` (principal / sustituta).
+> - Los atributos enumerados (`exito`, `tematica`, `tipo_serie`, etc.) se conectan con arista punteada `-.->` al nodo `[[valores]]` para reflejar las restricciones `CHECK` del esquema SQL Server.
+> - Para regenerar la imagen: abrir `streamucv_eer.mmd` en [mermaid.live](https://mermaid.live) → exportar como PNG → guardar en `docs/`.
+
+---
 ## 💡 Funcionalidades de la interfaz
 
 - **Menú lateral** con los 10 reportes, resaltado activo e indicador hover.
